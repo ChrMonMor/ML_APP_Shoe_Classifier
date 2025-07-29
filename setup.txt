@@ -1,0 +1,13 @@
+THE PLAN:
+/APP
+|--index.php 
+
+/ML
+|--base.ML :: the system we call to get a result.
+|--training files :: nebuales files that train the ML when its gotten an amount of new images recorded.
+|--/Shoes :: folder that classifices the images into the sub-folders. 
+    |--/Boots
+    |--/Others
+    |--/Sandals
+    |--/Sneakers
+
