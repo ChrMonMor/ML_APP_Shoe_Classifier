@@ -30,7 +30,7 @@ image_count = len(list(data_dir.glob('*/*.jpg')))
 print(f"Total image count: {image_count}")
 
 # Define categories
-categories = ['Cowboyboots', 'Loafers', 'Sandals', 'Sneakers'] # , 'FlipFlops'
+categories = ['Cowboyboots', 'FlipFlops', 'Loafers', 'Sandals', 'Sneakers']
 
 # Loop through each category and show the first image
 for category in categories:
@@ -100,58 +100,6 @@ print(np.min(first_image), np.max(first_image))
 # basic model
 num_classes = len(class_names)
 
-model = Sequential([
-  layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(32, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  layers.Flatten(),
-  layers.Dense(128, activation='relu'),
-  layers.Dense(num_classes)
-])
-
-# Compiling the model
-model.compile(optimizer='adam',
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
-
-# Model Summary
-model.summary()
-
-# training the model
-epochs=10
-history = model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=epochs
-)
-
-# Visualizing the training results
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-
-epochs_range = range(epochs)
-
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
-
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
-
 # Data augmentation
 data_augmentation = keras.Sequential(
   [
@@ -163,14 +111,6 @@ data_augmentation = keras.Sequential(
     layers.RandomZoom(0.1),
   ]
 )
-
-plt.figure(figsize=(10, 10))
-for images, _ in train_ds.take(1):
-  for i in range(9):
-    augmented_images = data_augmentation(images)
-    ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(augmented_images[0].numpy().astype("uint8"))
-    plt.axis("off")
 
 # Dropout 
 model = Sequential([
@@ -195,7 +135,7 @@ model.compile(optimizer='adam',
 
 model.summary()
 
-epochs = 15
+epochs = 25
 history = model.fit(
   train_ds,
   validation_data=val_ds,
@@ -243,32 +183,5 @@ print(
     .format(class_names[np.argmax(score)], 100 * np.max(score))
 )
 
-# Convert the Keras Sequential model to a TensorFlow Lite model
-# Convert the model.
-converter = tf.lite.TFLiteConverter.from_keras_model(model)
-tflite_model = converter.convert()
-
 # Save the model.
-with open('model.tflite', 'wb') as f:
-  f.write(tflite_model)
-
-# Run the lite Tensorflow model
-TF_MODEL_FILE_PATH = 'model.tflite' # The default path to the saved TensorFlow Lite model
-
-interpreter = tf.lite.Interpreter(model_path=TF_MODEL_FILE_PATH)
-
-interpreter.get_signature_list()
-
-classify_lite = interpreter.get_signature_runner('serving_default')
-print(classify_lite.get_input_details())
-print(classify_lite.get_output_details())
-
-predictions_lite = classify_lite(keras_tensor_15=img_array)['output_0']
-score_lite = tf.nn.softmax(predictions_lite)
-
-print(
-    "This image most likely belongs to {} with a {:.2f} percent confidence."
-    .format(class_names[np.argmax(score_lite)], 100 * np.max(score_lite))
-)
-
-print(np.max(np.abs(predictions - predictions_lite)))
+model.save('model.keras')
