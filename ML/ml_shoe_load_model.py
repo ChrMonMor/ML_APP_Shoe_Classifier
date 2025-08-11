@@ -13,7 +13,7 @@ loaded_model = load_model("model.keras")
 class_names = ['Cowboyboots', 'FlipFlops', 'Loafers', 'Sandals', 'Sneakers'] 
 
 # Image URL (change this to test different images)
-img_url = "https://pitaya.dk/cdn/shop/files/IMG_2868.jpg"
+img_url = "https://quickbutik.imgix.net/18654G/products/16853500116453b8554a60f.jpeg"
 
 # Download image with unique filename to avoid cache
 img_filename = str(uuid.uuid4()) + ".jpg"
@@ -27,10 +27,16 @@ img_array = tf.expand_dims(img_array, 0)  # Batch dimension
 
 # Predict
 predictions = loaded_model.predict(img_array)
-score = tf.nn.softmax(predictions[0])
+score = tf.nn.softmax(predictions[-1])
 
 # Output
+for i, class_name in enumerate(class_names):
+    print(f"{class_name}: {100 * score[i]:.2f}%")
+
+# Optionally still print the top result
 print(
-    "This image most likely belongs to {} with a {:.2f}% confidence."
+    "\nTop prediction: {} ({:.2f}%)"
     .format(class_names[np.argmax(score)], 100 * np.max(score))
 )
+
+

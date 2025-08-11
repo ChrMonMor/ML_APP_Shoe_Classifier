@@ -37,6 +37,7 @@ for category in categories:
     image_paths = list(data_dir.glob(f'{category}/*'))
     if image_paths:
         print(f"Showing first image from category: {category}")
+        print(f"{category}: {len(image_paths)} images")
         img = PIL.Image.open(image_paths[0])
         img.show()
     else:
@@ -66,22 +67,6 @@ val_ds = tf.keras.utils.image_dataset_from_directory(
 class_names = train_ds.class_names
 print(class_names)
 
-# Visualizing the data
-import matplotlib.pyplot as plt
-
-plt.figure(figsize=(10, 10))
-for images, labels in train_ds.take(1):
-  for i in range(9):
-    ax = plt.subplot(3, 3, i + 1)
-    plt.imshow(images[i].numpy().astype("uint8"))
-    plt.title(class_names[labels[i]])
-    plt.axis("off")
-
-for image_batch, labels_batch in train_ds:
-  print(image_batch.shape)
-  print(labels_batch.shape)
-  break
-
 # Configure the dataset for performance
 AUTOTUNE = tf.data.AUTOTUNE
 
@@ -101,16 +86,16 @@ print(np.min(first_image), np.max(first_image))
 num_classes = len(class_names)
 
 # Data augmentation
-data_augmentation = keras.Sequential(
-  [
+data_augmentation = keras.Sequential([
     layers.RandomFlip("horizontal",
                       input_shape=(img_height,
                                   img_width,
                                   3)),
-    layers.RandomRotation(0.1),
-    layers.RandomZoom(0.1),
-  ]
-)
+    layers.RandomRotation(0.2),
+    layers.RandomZoom(0.2),
+    layers.RandomTranslation(0.1, 0.1),
+    layers.RandomContrast(0.1),
+])
 
 # Dropout 
 model = Sequential([
@@ -135,35 +120,13 @@ model.compile(optimizer='adam',
 
 model.summary()
 
-epochs = 25
+epochs = 15
 history = model.fit(
   train_ds,
   validation_data=val_ds,
   epochs=epochs
 )
 
-# Visualizing the data
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
-
-loss = history.history['loss']
-val_loss = history.history['val_loss']
-
-epochs_range = range(epochs)
-
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Training Accuracy')
-plt.plot(epochs_range, val_acc, label='Validation Accuracy')
-plt.legend(loc='lower right')
-plt.title('Training and Validation Accuracy')
-
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
-plt.plot(epochs_range, val_loss, label='Validation Loss')
-plt.legend(loc='upper right')
-plt.title('Training and Validation Loss')
-plt.show()
 
 # Predict on new data
 sandal_url = "https://peti-sko.dk/cdn/shop/files/gul-line-sandal-woden-peti-sko-813876_600x.webp"
@@ -184,4 +147,4 @@ print(
 )
 
 # Save the model.
-model.save('model.keras')
+model.save('model.keras')  
